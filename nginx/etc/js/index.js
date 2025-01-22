@@ -19,7 +19,7 @@ const validateJwt = async (res) => {
     const preferred_key = parsed_jwk["keys"]
       .filter(k =>
         k.use === "sig"
-        && k.alg === "ES512"
+        && k.alg === "RS256" // "ES512"
       );
 
     if (preferred_key.length === 0)
@@ -32,8 +32,10 @@ const validateJwt = async (res) => {
         "jwk",
         preferred_key[0],
         {
-          name: "ECDSA",
-          namedCurve: "P-521"
+          /*name: "ECDSA",
+          namedCurve: "P-521"*/
+          name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256"
         },
         true,
         ["verify"]
@@ -44,17 +46,23 @@ const validateJwt = async (res) => {
       res.return(401);
       return;
     }
+    const decoded_header = atob(jwt_split[0]);
     const signing_input = jwt_split.slice(0, 2).join('.');
     const verify = await crypto.subtle.verify({
-      name: "ECDSA",
-      namedCurve: "P-521",
-      hash: "SHA-512",// from the header
+      name: "RSASSA-PKCS1-v1_5",
+      // namedCurve: "P-521",
+      hash: "SHA-256",// from the header
     },
       key,
       decode(jwt_split[2]),
       encoder.encode(signing_input),
     );
     res.error(verify);
+    if (!verify) {
+      res.variables.no_auth_reason = "bad_signature";
+      res.return(401);
+      return;
+    }
     res.return(203);
   } catch (err) {
     res.error(err);

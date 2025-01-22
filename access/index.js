@@ -2,7 +2,9 @@ const express = require("express");
 const app = express();
 
 app.get('/', (req, res) => {
-  res.json(true);
+  res.json({
+    message: "hello, valid jwt holder!"
+  });
 })
 
 app.listen(3000);
