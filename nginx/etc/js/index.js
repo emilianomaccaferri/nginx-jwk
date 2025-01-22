@@ -46,7 +46,6 @@ const validateJwt = async (res) => {
       res.return(401);
       return;
     }
-    const decoded_header = atob(jwt_split[0]);
     const signing_input = jwt_split.slice(0, 2).join('.');
     const verify = await crypto.subtle.verify({
       name: "RSASSA-PKCS1-v1_5",
