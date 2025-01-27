@@ -14,12 +14,13 @@ const decodeBase64 = (encoded) => {
 const validateJwt = async (res) => {
   try {
     // get the jwk (which can be cached)
-    const jwk = await res.subrequest('/kc/realms/master/protocol/openid-connect/certs');
+    const jwk = await res.subrequest('/signer/jwk');
     const parsed_jwk = JSON.parse(jwk.responseText);
     const preferred_key = parsed_jwk["keys"]
       .filter(k =>
-        k.use === "sig"
-        && k.alg === "RS256" // "ES512"
+        k.kty === "EC"
+        // k.use === "sig"
+        // k.alg === "ES512" // "RS256"
       );
 
     if (preferred_key.length === 0)
@@ -32,10 +33,11 @@ const validateJwt = async (res) => {
         "jwk",
         preferred_key[0],
         {
-          /*name: "ECDSA",
-          namedCurve: "P-521"*/
-          name: "RSASSA-PKCS1-v1_5",
-          hash: "SHA-256"
+          name: "ECDSA",
+          namedCurve: "P-521",
+          // hash: "SHA-512"
+          /*name: "RSASSA-PKCS1-v1_5",
+          hash: "SHA-256"*/
         },
         true,
         ["verify"]
@@ -48,9 +50,10 @@ const validateJwt = async (res) => {
     }
     const signing_input = jwt_split.slice(0, 2).join('.');
     const verify = await crypto.subtle.verify({
-      name: "RSASSA-PKCS1-v1_5",
-      // namedCurve: "P-521",
-      hash: "SHA-256",// from the header
+      name: "ECDSA", // "RSASSA-PKCS1-v1_5",
+      namedCurve: "P-521",
+      hash: "SHA-512"
+      // hash: "SHA-256",// from the header
     },
       key,
       decode(jwt_split[2]),

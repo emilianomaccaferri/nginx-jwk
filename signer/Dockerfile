@@ -1,5 +1,7 @@
 FROM node:23-alpine3.20
 WORKDIR /code
-ADD . .
+COPY . .
+
+RUN npm i
 
 CMD ["node", "index.js"]

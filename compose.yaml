@@ -2,31 +2,29 @@ networks:
   nginx-jwk-net:
 
 services:
-  access:
+  microservice-a:
     build: 
       dockerfile: Dockerfile
-      context: ./access
+      context: ./microservice-a
     networks:
       - nginx-jwk-net
-  kc:
-    build:
-      dockerfile: ./keycloak/Dockerfile
-    ports:
-      - 8080:8080
-    entrypoint: ["/opt/keycloak/bin/kc.sh", "start-dev"]
-    environment:
-      - KC_HOSTNAME=localhost
-      - KC_HOSTNAME_PORT=8080
-      - KC_HOSTNAME_STRICT=false
-      - KC_HOSTNAME_STRICT_HTTPS=false
-      - KEYCLOAK_ADMIN=admin
-      - KEYCLOAK_ADMIN_PASSWORD=admin
+  microservice-b:
+    build: 
+      dockerfile: Dockerfile
+      context: ./microservice-b
+    networks:
+      - nginx-jwk-net
+  signer: 
+    build: 
+      dockerfile: Dockerfile
+      context: ./signer
     networks:
       - nginx-jwk-net
   nginx:
     depends_on:
-      - kc
-      - access
+      - signer
+      - microservice-a
+      - microservice-b
     build:
       network: host
       context: ./nginx
@@ -37,4 +35,4 @@ services:
     networks:
       - nginx-jwk-net
     ports:
-      - 58080:6000
+      - 58080:8000
